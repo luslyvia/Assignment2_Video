@@ -43,7 +43,7 @@ if __name__ == "__main__":
     qps = [22, 27, 32, 37]
     csv_path = "results/baseline_metrics.csv"
 
-    print("=== BẮT ĐẦU CHẠY BASELINE  ===")
+    print("=== BẮT ĐẦU CHẠY BASELINE ===")
     print("Lưu ý: Quá trình này có thể mất từ 10 - 20 phút tùy cấu hình máy...\n")
 
     # Kiểm tra file tồn tại
