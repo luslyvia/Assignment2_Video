@@ -201,24 +201,23 @@ def estimate_adaptive_bitrate_saving(df, base_qp, avg_qp_adaptive):
 # ==========================================
 
 st.set_page_config(layout="wide", page_title="Perceptual QP Optimization")
-st.title("🎬 Perceptual Quantization Optimization System")
-st.write("Môn học: Nén và Mã hóa dữ liệu đa phương tiện | Nhóm: Đặng Thuỳ Linh - Nguyễn Hương Giang")
+st.title("Perceptual Quantization Optimization System")
 
 # --- SIDEBAR ---
-st.sidebar.header("⚙️ Thanh điều khiển hệ thống")
-uploaded_file = st.sidebar.file_uploader("Tải ảnh/khung hình mẫu lên", type=["jpg", "png", "jpeg"])
-base_qp = st.sidebar.slider("Hệ số lượng tử nền (Base QP)", min_value=10, max_value=40, value=24)
-sensitivity = st.sidebar.slider("Độ nhạy cảm nhận (Perceptual Sensitivity)", min_value=0.0, max_value=2.0, value=1.0, step=0.1)
-block_size = st.sidebar.selectbox("Kích thước khối lượng tử (Block Size)", [8, 16], index=1)
-threshold = st.sidebar.slider("Ngưỡng phân loại vùng (Threshold T)", min_value=50, max_value=500, value=100, step=50,
-                               help="Ngưỡng variance để block_analyzer phân loại vùng phẳng vs chi tiết")
+st.sidebar.header("System Control Panel")
+uploaded_file = st.sidebar.file_uploader("Upload sample image/frame", type=["jpg", "png", "jpeg"])
+base_qp = st.sidebar.slider("Base Quantization Parameter (Base QP)", min_value=10, max_value=40, value=24)
+sensitivity = st.sidebar.slider("Perceptual Sensitivity", min_value=0.0, max_value=2.0, value=1.0, step=0.1)
+block_size = st.sidebar.selectbox("Quantization Block Size", [8, 16], index=1)
+threshold = st.sidebar.slider("Region Calssification Threshold (Threshold T)", min_value=50, max_value=500, value=100, step=50,
+                               help="Variance threshold for block_analyzer to classify flat vs. textured regions")
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("**Chú thích màu QP Map:**")
-st.sidebar.markdown("🔴 Đỏ = QP cao → Nén mạnh (vùng chi tiết)")
-st.sidebar.markdown("🔵 Xanh = QP thấp → Giữ nét (vùng phẳng)")
+st.sidebar.markdown("**QP Map Color Legend:**")
+st.sidebar.markdown("Red = High QP → Heavy compression (textured region)")
+st.sidebar.markdown("Blue = Low QP → Preserve details (flat region)")
 
-# --- ĐỌC ẢNH ---
+# --- IMAGE LOADING ---
 if uploaded_file is not None:
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     img_bgr = cv2.imdecode(file_bytes, 1)
@@ -227,7 +226,7 @@ else:
     cv2.circle(img_bgr, (128, 128), 60, (255, 255, 255), -1)
     cv2.putText(img_bgr, "Hay upload anh", (30, 135), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-# Đảm bảo chia hết cho block_size
+# Ensure dimensions are divisible by block_size
 h, w = img_bgr.shape[:2]
 h_new = (h // block_size) * block_size
 w_new = (w // block_size) * block_size
@@ -235,7 +234,7 @@ img_bgr = cv2.resize(img_bgr, (w_new, h_new))
 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
 # --- CHẠY THUẬT TOÁN ---
-with st.spinner("Đang xử lý thuật toán..."):
+with st.spinner("Processing algorithm..."):
     # BƯỚC 3: Dùng hybrid QP map (kết hợp cả 2 module)
     qp_map, var_map = generate_hybrid_qp_map(img_bgr, base_qp, sensitivity, threshold, block_size)
 
@@ -273,62 +272,61 @@ with st.spinner("Đang xử lý thuật toán..."):
 # ==========================================
 # PHẦN HIỂN THỊ 1: So sánh ảnh gốc / QP map / Adaptive
 # ==========================================
-st.header("🖼️ Phần 1 — Kết quả nén thích nghi")
+st.header("Part 1 - Adaptive Compression Results")
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    st.subheader("1. Khung hình Gốc (Raw)")
+    st.subheader("1. Original Frame (Raw)")
     st.image(img_rgb, use_container_width=True)
-    st.info("Trạng thái: Chưa nén")
+    st.info("Status: Uncompressed")
 
 with col2:
-    st.subheader("2. Bản đồ QP Map (Hybrid)")
+    st.subheader("2. QP Map (Hybrid)")
     fig_qp, ax_qp = plt.subplots()
     im = ax_qp.imshow(qp_map, cmap='jet', vmin=1, vmax=51)
     ax_qp.axis('off')
-    fig_qp.colorbar(im, ax=ax_qp, orientation='horizontal', label='Giá trị QP')
+    fig_qp.colorbar(im, ax=ax_qp, orientation='horizontal', label='QP Value')
     st.pyplot(fig_qp)
     plt.close(fig_qp)
-    st.caption("Kết hợp: variance liên tục (Member A) + delta ±3 nhị phân (Member B)")
 
 with col3:
-    st.subheader("3. Sau Nén Thích Nghi (Proposed)")
+    st.subheader("3. After Adaptive Compression (Proposed)")
     st.image(img_compressed_adaptive_rgb, use_container_width=True)
-    st.success(f"QP trung bình: {avg_qp_adaptive:.1f} (Baseline: {avg_qp_baseline:.1f})")
+    st.success(f"Average QP: {avg_qp_adaptive:.1f} (Baseline: {avg_qp_baseline:.1f})")
 
 # ==========================================
 # BƯỚC 4: BEFORE / AFTER VISUAL QUALITY
 # ==========================================
 st.write("---")
-st.header("🔍 Phần 2 — Before / After Visual Quality")
+st.header("🔍 Phần 2 — Before/After Visual Quality")
 
 col_a, col_b, col_c, col_d = st.columns(4)
 
 with col_a:
     st.subheader("Baseline")
     st.image(img_compressed_baseline_rgb, use_container_width=True)
-    st.caption(f"QP cố định = {base_qp} | PSNR: {psnr_base:.2f} dB | SSIM: {ssim_base:.4f}")
+    st.caption(f"Fixed QP = {base_qp} | PSNR: {psnr_base:.2f} dB | SSIM: {ssim_base:.4f}")
 
 with col_b:
     st.subheader("Adaptive (Proposed)")
     st.image(img_compressed_adaptive_rgb, use_container_width=True)
-    st.caption(f"QP TB = {avg_qp_adaptive:.1f} | PSNR: {psnr_adapt:.2f} dB | SSIM: {ssim_adapt:.4f}")
+    st.caption(f"Average QP = {avg_qp_adaptive:.1f} | PSNR: {psnr_adapt:.2f} dB | SSIM: {ssim_adapt:.4f}")
 
 with col_c:
     st.subheader("Difference Map (×5)")
     st.image(diff_amplified, use_container_width=True)
-    st.caption("Vùng sáng = sai lệch lớn giữa 2 phương pháp. Vùng tối = tương đồng.")
+    st.caption("Bright regions = high discrepancy between methods. Dark regions = high similarity.")
 
 with col_d:
     st.subheader("Block Classification")
     st.image(block_viz_rgb, use_container_width=True)
-    st.caption("🟢 Xanh lá = vùng phẳng (QP tăng). 🔴 Đỏ = vùng chi tiết (QP giảm)")
+    st.caption("Green = flat region (QP increased). Red = textured region (QP decreased)")
 
 # ==========================================
 # BẢNG SO SÁNH METRICS
 # ==========================================
 st.write("---")
-st.header("📊 Phần 3 — Bảng phân tích hiệu năng")
+st.header("Part 3 - Performance Analysis Table")
 
 # Đọc CSV để lấy bitrate thật (Bước 5)
 df_baseline = load_baseline_csv("results/baseline_metrics.csv")
@@ -339,36 +337,28 @@ if df_baseline is not None:
     bitrate_adapt_str = f"{br_adapt_est:.0f} kbps (nội suy)" if br_adapt_est else "N/A"
     saving_str = f"{saving_pct:.1f}%" if saving_pct is not None else "N/A"
 else:
-    bitrate_base_str = "Chưa có CSV"
-    bitrate_adapt_str = "Chưa có CSV"
-    saving_str = f"~{max(0.0, (avg_qp_adaptive - avg_qp_baseline) * 3.5):.1f}% (ước lượng)"
+    bitrate_base_str = "CSV not available"
+    bitrate_adapt_str = "CCSV not available"
+    saving_str = f"~{max(0.0, (avg_qp_adaptive - avg_qp_baseline) * 3.5):.1f}% (estimated)"
 
 df_metrics = pd.DataFrame({
-    "Phương pháp": ["Nén cố định (Baseline)", "Nén cảm nhận (Proposed)"],
-    "QP Trung bình": [f"{avg_qp_baseline:.1f}", f"{avg_qp_adaptive:.1f}"],
+    "Method": ["Fixed compression (Baseline)", "Perceptual compression (Proposed)"],
+    "Average QP": [f"{avg_qp_baseline:.1f}", f"{avg_qp_adaptive:.1f}"],
     "Bitrate": [bitrate_base_str, bitrate_adapt_str],
     "PSNR (dB)": [f"{psnr_base:.2f}", f"{psnr_adapt:.2f}"],
     "SSIM": [f"{ssim_base:.4f}", f"{ssim_adapt:.4f}"],
-    "Bitrate tiết kiệm": ["—", saving_str],
+    "Bitrate savings": ["—", saving_str],
 })
 st.dataframe(df_metrics, use_container_width=True, hide_index=True)
-
-st.markdown("""
-**Phân tích:** Phương pháp Adaptive kết hợp 2 thuật toán:
-- **Member A** (variance liên tục): phân bổ QP mịn theo mức độ phức tạp thật sự của từng vùng
-- **Member B** (delta ±3 nhị phân): bổ sung quyết định cứng — vùng phẳng nén mạnh hơn, vùng chi tiết giữ nét hơn
-
-Chỉ số **SSIM** của Proposed giữ gần bằng Baseline dù QP trung bình cao hơn → **Texture Masking hoạt động đúng**.
-""")
 
 # ==========================================
 # BƯỚC 5: RD-CURVE TỪ CSV THỰC ĐO
 # ==========================================
 st.write("---")
-st.header("📈 Phần 4 — Rate-Distortion Curve (Baseline thực đo)")
+st.header("Part 4 - Rate-Distortion Curve (Measured Baseline)")
 
 if df_baseline is not None:
-    st.success(f"Đã tải dữ liệu baseline: {len(df_baseline)} dòng từ results/baseline_metrics.csv")
+    st.success(f"Loaded baseline data: {len(df_baseline)} rows from results/baseline_metrics.csv")
     
     col_rd1, col_rd2 = st.columns([2, 1])
     with col_rd1:
@@ -376,15 +366,8 @@ if df_baseline is not None:
         st.pyplot(fig_rd)
         plt.close(fig_rd)
     with col_rd2:
-        st.subheader("Dữ liệu gốc")
+        st.subheader("Raw data")
         st.dataframe(df_baseline, use_container_width=True, hide_index=True)
     
-    st.markdown("""
-    **Đọc biểu đồ:** Mỗi điểm trên đường là 1 lần nén với 1 mức QP. 
-    - QP thấp → bitrate cao → PSNR cao (chất lượng tốt hơn, file nặng hơn)  
-    - QP cao → bitrate thấp → PSNR thấp (file nhẹ hơn, chất lượng giảm)  
-    - Phương pháp Adaptive của nhóm nhắm đến: **PSNR tương đương Baseline nhưng Bitrate thấp hơn** (dịch sang trái trên biểu đồ)
-    """)
 else:
-    st.warning("⚠️ Chưa tìm thấy file `results/baseline_metrics.csv`. Hãy chạy `python run_baseline.py` trước để sinh dữ liệu thực.")
-    st.info("Sau khi có CSV, biểu đồ Rate-Distortion Curve sẽ tự động hiện ra ở đây.")
+    st.warning("Warning: The file `results/baseline_metrics.csv` was not found. Please run `python run_baseline.py` first to generate actual data.")
