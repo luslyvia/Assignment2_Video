@@ -1,13 +1,28 @@
-# HƯỚNG DẪN CHẠY AS2
-## 1. Cài đặt môi trường
-Mở Terminal/Command Prompt tại thư mục dự án và chạy lệnh:
+# Perceptual Quantization Optimization System
+
+This project implements a **Perceptual Quantization Optimization** system for multimedia data compression. It features a live interactive system that dynamically adjusts the Quantization Parameter (QP) for individual image/frame blocks based on the **Human Visual System (HVS)** characteristics, specifically leveraging **Texture Masking** principles.
+
+---
+
+## System Overview & Architecture
+
+The framework consists of a pipeline that performs spatial complexity analysis to optimize bits allocation without degrading the perceptual quality:
+
+1. **Spatial Complexity Analysis:** Input frames are partitioned into $16 \times 16$ macroblocks to calculate local spatial variance.
+2. **Adaptive QP Mapping:** A non-linear mapping function assigns lower QP values to smooth/critical regions (preserving details) and higher QP values to highly textured regions (compressing aggressively).
+3. **Quantization Engine:** Simulates the compression pipeline via Discrete Cosine Transform (DCT) and block-wise adaptive quantization matrix scaling.
+
+---
+
+## Installation & Environment Setup
+
+Follow these steps to configure the environment and run the live demo system:
+
+### 1. Prerequisites
+Ensure you have **Python 3.8 or higher** installed on your system.
+
+### 2. Install Required Dependencies
+Open your terminal or command prompt in the project root directory and execute the following command to install all necessary libraries:
+
+```bash
 pip install opencv-python numpy streamlit matplotlib scikit-image
-
-## 2. Khởi chạy hệ thống Live Demo
-Gõ lệnh sau để mở giao diện Web tương tác trên trình duyệt:
-streamlit run main.py
-
-## 3. Cách tái lập kết quả thực nghiệm
-- Bước 1: Truy cập vào giao diện Localhost hiển thị trên màn hình terminal.
-- Bước 2: Tại thanh Sidebar bên trái, nhấn "Browse files" để tải lên ảnh trong thư mục dữ liệu mẫu.
-- Bước 3: Điều chỉnh thanh trượt 'Base QP' và 'Perceptual Sensitivity' để quan sát sự thay đổi trực quan của bản đồ nhiệt QP Map và bảng so sánh số liệu PSNR/SSIM ở phía dưới.
