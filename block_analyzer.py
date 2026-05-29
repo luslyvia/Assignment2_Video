@@ -62,7 +62,7 @@ def debug_visualize_blocks(frame, delta_qp_matrix):
             x_end = x_start + block_size
             
             # Neu matrix la 3 (vung phang), ve khung mau xanh la cay
-            if delta_qp_matrix[r][c] == 3:
+            if delta_qp_matrix[r][c] == +3:
                 cv2.rectangle(visual_image, (x_start, y_start), (x_end, y_end), (0, 255, 0), 1)
             # Neu matrix la -3 (vung chi tiet), ve khung mau do
             elif delta_qp_matrix[r][c] == -3:
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         print("Loi: Khong tim thay file video tai duong dan data/vidyo1.mp4")
     else:
         # Chay thu thuat toan voi nguong tu chon T = 100
-        chosen_threshold = 300
+        chosen_threshold = 100
         matrix = analyze_frame_adaptive(test_frame, threshold=chosen_threshold)
         
         # Kiem tra kich thuoc ma tran dau ra de dam bao khong lam loi code Ban A
