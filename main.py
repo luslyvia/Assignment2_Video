@@ -33,7 +33,6 @@ def calculate_block_variance(image, block_size=16):
 
 def generate_perceptual_qp_map(variance_map, base_qp=24, sensitivity=1.0):
     """
-    Member A — Adaptive QP từ variance liên tục.
     Chiều: vùng chi tiết (variance cao) → QP tăng (texture masking, tiết kiệm bitrate).
             vùng phẳng (variance thấp)  → QP gần base (mắt người nhạy với artifact ở vùng trơn).
     """
@@ -45,10 +44,8 @@ def generate_perceptual_qp_map(variance_map, base_qp=24, sensitivity=1.0):
 
 def generate_hybrid_qp_map(image, base_qp=24, sensitivity=1.0, threshold=100, block_size=16):
     """
-    Kết hợp Member A (variance liên tục) + Member B (delta ±3 nhị phân).
-    Cả hai cùng chiều:
-        vùng phẳng   → QP tăng  (+delta từ A, +3 từ B)
-        vùng chi tiết → QP thấp hơn (delta nhỏ từ A, −3 từ B)
+        vùng phẳng   → QP tăng
+        vùng chi tiết → QP thấp hơn
     """
     var_map  = calculate_block_variance(image, block_size)
     qp_map_a = generate_perceptual_qp_map(var_map, base_qp, sensitivity)
@@ -192,7 +189,10 @@ st.sidebar.header("System Control Panel")
 uploaded_video = st.sidebar.file_uploader("Upload video file (.mp4)", type=["mp4"])
 base_qp     = st.sidebar.slider("Base Quantization Parameter (Base QP)", 10, 40, 24)
 sensitivity = st.sidebar.slider("Perceptual Sensitivity", 0.0, 2.0, 1.0, 0.1)
-block_size  = st.sidebar.selectbox("Quantization Block Size", [8, 16], index=1)
+
+# KHÓA CỨNG BLOCK SIZE = 16 (Đã loại bỏ selectbox 8x8)
+block_size  = 16 
+
 threshold   = st.sidebar.slider("Region Classification Threshold (T)", 50, 500, 100, 50,
                                  help="Variance threshold: classify flat vs. textured blocks")
 st.sidebar.markdown("---")
@@ -223,14 +223,13 @@ if uploaded_video is not None:
 else:
     video_path = None
     img_bgr     = np.zeros((256, 256, 3), dtype=np.uint8)
-    # Tính tọa độ text động theo kích thước ảnh để không bị lệch ra ngoài khung
     text        = "Upload a video to begin"
     font        = cv2.FONT_HERSHEY_SIMPLEX
     font_scale  = 0.6
     thickness   = 2
     (text_w, text_h), _ = cv2.getTextSize(text, font, font_scale, thickness)
-    text_x = (256 - text_w) // 2   # căn giữa theo chiều ngang
-    text_y = (256 + text_h) // 2   # căn giữa theo chiều dọc
+    text_x = (256 - text_w) // 2   
+    text_y = (256 + text_h) // 2   
     cv2.putText(img_bgr, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness)
 
 # Ensure divisible by block_size
@@ -287,7 +286,8 @@ with c2:
     im = ax_qp.imshow(qp_map, cmap='jet', vmin=1, vmax=51)
     ax_qp.axis('off')
     fig_qp.colorbar(im, ax=ax_qp, orientation='horizontal', label='QP Value')
-    st.pyplot(fig_qp);  plt.close(fig_qp)
+    st.pyplot(fig_qp)
+    plt.close(fig_qp)
     st.caption("Red = high QP (textured, compress more) | Blue = low QP (flat, preserve quality)")
 
 with c3:
@@ -365,6 +365,7 @@ if path_base and path_adapt:
                 data=f, file_name=f"adaptive_qp{int(math.ceil(avg_qp_adaptive))}.mp4",
                 mime="video/mp4", use_container_width=True
             )
+
 # ── Part 4: RD-Curve từ baseline_metrics.csv ─────────────────────────────────
 st.write("---")
 st.header("Part 4 — Rate-Distortion Curve (Measured Baseline)")
