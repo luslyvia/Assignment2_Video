@@ -222,9 +222,16 @@ if uploaded_video is not None:
         st.stop()
 else:
     video_path = None
-    img_bgr    = np.zeros((256, 256, 3), dtype=np.uint8)
-    cv2.putText(img_bgr, "Upload a video to begin", (30, 135),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+    img_bgr     = np.zeros((256, 256, 3), dtype=np.uint8)
+    # Tính tọa độ text động theo kích thước ảnh để không bị lệch ra ngoài khung
+    text        = "Upload a video to begin"
+    font        = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale  = 0.6
+    thickness   = 2
+    (text_w, text_h), _ = cv2.getTextSize(text, font, font_scale, thickness)
+    text_x = (256 - text_w) // 2   # căn giữa theo chiều ngang
+    text_y = (256 + text_h) // 2   # căn giữa theo chiều dọc
+    cv2.putText(img_bgr, text, (text_x, text_y), font, font_scale, (255, 255, 255), thickness)
 
 # Ensure divisible by block_size
 h, w    = img_bgr.shape[:2]
