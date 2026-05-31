@@ -1,12 +1,14 @@
-# Perceptual Quantization Optimization System
+# Perceptual Quantization Optimization for Video Compression
 
 ## Overview
 
-The **Perceptual Quantization Optimization System** is a multimedia compression framework that dynamically adjusts the Quantization Parameter (QP) based on Human Visual System (HVS) characteristics.
+The **Perceptual Quantization Optimization System** is a video compression framework that dynamically adjusts the Quantization Parameter (QP) according to Human Visual System (HVS) characteristics.
 
-Instead of applying a fixed quantization level to all image regions, the system analyzes local spatial complexity and allocates bits more efficiently using **Texture Masking** principles. Smooth and visually sensitive regions are preserved with lower QP values, while highly textured regions are compressed more aggressively with higher QP values.
+Instead of applying a fixed quantization level to every region of a video frame, the system analyzes spatial complexity on a macroblock basis and allocates bits more efficiently using **Texture Masking** principles. Smooth and visually sensitive regions receive lower QP values to preserve important visual details, while highly textured regions are compressed more aggressively.
 
-The project provides an interactive visualization platform built with Streamlit, allowing users to observe the adaptive quantization process in real time.
+The system processes videos frame-by-frame and provides an interactive visualization platform that demonstrates adaptive quantization behavior and compression quality metrics.
+
+> **Note:** This project focuses on spatial perceptual optimization. Temporal redundancy reduction techniques such as motion estimation and motion compensation are not included in the current implementation.
 
 ---
 
@@ -14,53 +16,57 @@ The project provides an interactive visualization platform built with Streamlit,
 
 The processing pipeline consists of the following stages:
 
-```
-Input Image / Video Frame
-            │
-            ▼
+```text
+Input Video
+     │
+     ▼
+Frame Extraction
+     │
+     ▼
 Spatial Complexity Analysis
-(16×16 Macroblock Variance)
-            │
-            ▼
+(16×16 Macroblocks)
+     │
+     ▼
 Adaptive QP Mapping
 (HVS-Based Optimization)
-            │
-            ▼
+     │
+     ▼
 DCT Transformation
-            │
-            ▼
+     │
+     ▼
 Adaptive Quantization
-            │
-            ▼
+     │
+     ▼
 Inverse Quantization
-            │
-            ▼
+     │
+     ▼
 Inverse DCT
-            │
-            ▼
-Reconstructed Frame
-            │
-            ▼
+     │
+     ▼
+Frame Reconstruction
+     │
+     ▼
+Output Video
+     │
+     ▼
 Quality Evaluation
-(PSNR, SSIM, Compression Statistics)
+(PSNR, SSIM)
 ```
 
 ---
 
 # Main Features
 
-- Human Visual System (HVS) based optimization
-- Texture masking driven QP adaptation
-- Macroblock-level complexity analysis
-- Adaptive quantization matrix scaling
+- Human Visual System (HVS) based perceptual optimization
+- Texture masking driven adaptive quantization
+- Frame-by-frame video processing
+- 16×16 macroblock spatial complexity analysis
+- Dynamic Quantization Parameter (QP) allocation
 - DCT-based compression simulation
-- Interactive Streamlit dashboard
-- Visualization of:
-  - Original image/frame
-  - Variance heatmap
-  - QP allocation map
-  - Reconstructed output
-  - Compression metrics
+- Interactive Streamlit visualization
+- Original vs reconstructed video comparison
+- Quality evaluation using PSNR and SSIM
+- Compression statistics and performance reporting
 
 ---
 
@@ -72,6 +78,7 @@ Assignment2_Video/
 ├── app.py
 ├── main.py
 ├── src/
+│   ├── video_loader.py
 │   ├── complexity_analysis.py
 │   ├── adaptive_qp.py
 │   ├── dct_engine.py
@@ -80,11 +87,11 @@ Assignment2_Video/
 │   └── utils.py
 │
 ├── assets/
-│   ├── sample_images/
 │   └── sample_videos/
 │
 ├── output/
-│   ├── reconstructed/
+│   ├── compressed_videos/
+│   ├── reconstructed_frames/
 │   ├── heatmaps/
 │   └── reports/
 │
@@ -103,15 +110,13 @@ Assignment2_Video/
 - Ubuntu 20.04 LTS or newer
 - Ubuntu 22.04 LTS recommended
 
-## Python
-
-Python version:
+## Python Version
 
 ```bash
 Python >= 3.8
 ```
 
-Check installed version:
+Check your Python version:
 
 ```bash
 python3 --version
@@ -151,7 +156,7 @@ pip3 --version
 git clone https://github.com/luslyvia/Assignment2_Video.git
 ```
 
-Navigate into the project directory:
+Navigate to the project directory:
 
 ```bash
 cd Assignment2_Video
@@ -159,21 +164,21 @@ cd Assignment2_Video
 
 ---
 
-## Step 4: Create Virtual Environment (Recommended)
+## Step 4: Create a Virtual Environment (Recommended)
 
-Install virtual environment package:
+Install virtual environment support:
 
 ```bash
 sudo apt install python3-venv -y
 ```
 
-Create environment:
+Create a virtual environment:
 
 ```bash
 python3 -m venv venv
 ```
 
-Activate environment:
+Activate the environment:
 
 ```bash
 source venv/bin/activate
@@ -197,7 +202,7 @@ Install all required libraries:
 pip install opencv-python numpy streamlit matplotlib scikit-image
 ```
 
-Or install from requirements file:
+Or install directly from the requirements file:
 
 ```bash
 pip install -r requirements.txt
@@ -207,9 +212,9 @@ pip install -r requirements.txt
 
 # Running the Application
 
-## Option 1: Launch Interactive Streamlit Dashboard
+## Launch the Interactive Streamlit Dashboard
 
-Start the Streamlit application:
+Start the application:
 
 ```bash
 streamlit run app.py
@@ -217,11 +222,11 @@ streamlit run app.py
 
 Expected output:
 
-```bash
+```text
 Local URL: http://localhost:8501
 ```
 
-Open your browser and navigate to:
+Open your web browser and navigate to:
 
 ```text
 http://localhost:8501
@@ -229,83 +234,140 @@ http://localhost:8501
 
 ---
 
-## Option 2: Run Compression Pipeline Directly
+## Alternative: Run the Processing Pipeline Directly
 
-If the project contains a standalone processing script:
+If the repository includes a standalone processing script:
 
 ```bash
 python3 main.py
 ```
 
-This mode processes input images/videos and generates outputs automatically.
+This mode processes the selected video and generates output files automatically.
+
+---
+
+# Supported Input Formats
+
+The system currently supports video files only:
+
+- MP4
+- AVI
+- MOV
+- MKV
+
+Input videos are processed frame-by-frame through the adaptive quantization pipeline.
 
 ---
 
 # Using the Interactive Dashboard
 
-## Upload Input
+## 1. Upload a Video
 
-The system accepts:
-
-- JPG
-- JPEG
-- PNG
-- BMP
-
-and optionally:
-
-- MP4
-- AVI
-
-depending on implementation.
+Upload a supported video file from your local machine.
 
 ---
 
-## Processing Workflow
+## 2. Frame Extraction
 
-### 1. Upload an Image
+The system extracts individual frames from the uploaded video.
 
-Select an image from your local machine.
+---
 
-### 2. Complexity Analysis
+## 3. Spatial Complexity Analysis
 
-The system divides the image into:
+Each frame is divided into:
 
 ```text
-16 × 16 macroblocks
+16 × 16 Macroblocks
 ```
 
-and computes local variance values.
+The local variance of each macroblock is calculated to estimate spatial complexity.
 
-### 3. Adaptive QP Assignment
+---
 
-Each macroblock receives a QP value according to:
+## 4. Adaptive QP Assignment
+
+Based on the calculated variance:
 
 - Low variance → Lower QP
 - High variance → Higher QP
 
-This follows Texture Masking principles.
+This follows Human Visual System texture masking principles.
 
-### 4. DCT Compression Simulation
+---
 
-The system applies:
+## 5. Compression Simulation
 
-- Forward DCT
-- Quantization
-- Inverse Quantization
-- Inverse DCT
+For every frame, the system performs:
 
-to reconstruct the image.
+1. Forward DCT
+2. Adaptive Quantization
+3. Inverse Quantization
+4. Inverse DCT
 
-### 5. Visualization
+---
+
+## 6. Video Reconstruction
+
+The reconstructed frames are combined to generate the final output video.
+
+---
+
+## 7. Visualization
 
 The dashboard displays:
 
-- Original Image
-- Variance Map
-- QP Heatmap
-- Reconstructed Image
-- Error Map
+- Original Video
+- Reconstructed Video
+- Variance Heatmaps
+- QP Distribution Maps
+- Compression Statistics
+- Quality Metrics
+
+---
+
+# Compression Methodology
+
+## Spatial Complexity Analysis
+
+Each frame is partitioned into 16×16 macroblocks.
+
+For every macroblock, the local variance is computed:
+
+\[
+Variance = \frac{1}{N}\sum_{i=1}^{N}(x_i-\mu)^2
+\]
+
+where:
+
+- \(x_i\) is a pixel value
+- \(\mu\) is the block mean
+- \(N\) is the number of pixels in the block
+
+Higher variance indicates more texture and visual complexity.
+
+---
+
+## Adaptive Quantization Parameter Mapping
+
+The computed variance is mapped to Quantization Parameters (QP):
+
+- Smooth regions → Smaller QP
+- Textured regions → Larger QP
+
+This strategy reduces bitrate while maintaining perceptual quality.
+
+---
+
+## DCT-Based Compression
+
+The system applies the Discrete Cosine Transform (DCT) to each block:
+
+\[
+F(u,v)
+\]
+
+The transformed coefficients are then quantized using adaptive quantization matrices scaled according to the assigned QP.
 
 ---
 
@@ -313,9 +375,7 @@ The dashboard displays:
 
 ## Peak Signal-to-Noise Ratio (PSNR)
 
-Measures reconstruction quality.
-
-Formula:
+PSNR measures reconstruction quality.
 
 \[
 PSNR = 10 \log_{10}
@@ -324,65 +384,93 @@ PSNR = 10 \log_{10}
 \right)
 \]
 
-Higher PSNR indicates better quality.
+Higher PSNR values indicate better reconstruction quality.
 
 ---
 
 ## Structural Similarity Index (SSIM)
 
-Measures perceptual similarity between images.
+SSIM measures perceptual similarity between the original and reconstructed frames.
 
 Range:
 
 ```text
-0 → Completely different
+0 → Completely Different
 1 → Identical
 ```
+
+Higher SSIM values indicate better perceptual quality.
 
 ---
 
 ## Compression Ratio
 
-Measures storage reduction effectiveness.
-
-Formula:
+Compression efficiency is measured using:
 
 \[
-Compression\ Ratio =
+Compression\ Ratio=
 \frac{Original\ Size}
 {Compressed\ Size}
 \]
 
+Higher ratios indicate better compression efficiency.
+
 ---
 
-# Example Output
+# Output
 
-The system generates:
+After processing, the system generates:
 
-### Original Frame
+## Reconstructed Video
 
-Input image before processing.
+The reconstructed video produced by adaptive quantization.
 
-### Variance Heatmap
+## Variance Heatmaps
 
-Visualization of spatial complexity.
+Visualization of frame spatial complexity.
 
-### QP Allocation Map
+## QP Allocation Maps
 
-Block-wise adaptive quantization parameter distribution.
+Visualization of adaptive QP distribution across macroblocks.
 
-### Reconstructed Frame
+## Quality Metrics
 
-Image after compression simulation.
-
-### Compression Report
-
-Contains:
-
+- Average PSNR
+- Average SSIM
 - Average QP
-- PSNR
-- SSIM
+- Processing Time
+
+## Compression Statistics
+
+- Original Video Size
+- Estimated Compressed Size
 - Compression Ratio
+
+---
+
+# Example Workflow
+
+```text
+sample.mp4
+    │
+    ▼
+Frame Extraction
+    │
+    ▼
+Spatial Complexity Analysis
+    │
+    ▼
+Adaptive QP Optimization
+    │
+    ▼
+DCT Quantization
+    │
+    ▼
+Frame Reconstruction
+    │
+    ▼
+output.mp4
+```
 
 ---
 
@@ -396,7 +484,7 @@ Install Streamlit:
 pip install streamlit
 ```
 
-Verify:
+Verify installation:
 
 ```bash
 streamlit --version
@@ -406,13 +494,13 @@ streamlit --version
 
 ## OpenCV Import Error
 
-Install OpenCV:
+Reinstall OpenCV:
 
 ```bash
 pip install opencv-python
 ```
 
-Test:
+Test installation:
 
 ```bash
 python3
@@ -425,7 +513,7 @@ print(cv2.__version__)
 
 ---
 
-## Permission Denied
+## Permission Denied Error
 
 Grant execution permission:
 
@@ -444,24 +532,25 @@ chmod +x main.py
 # Future Improvements
 
 - Temporal masking integration
-- Motion-compensated adaptive QP allocation
-- Video-level optimization
+- Motion estimation and compensation
+- GOP-based processing
+- H.264/H.265 inspired rate control
 - Real-time streaming support
-- JPEG/H.264 compatible quantization matrices
 - Machine learning based perceptual quality prediction
+- Content-aware quantization matrices
 
 ---
 
 # Authors
 
-Multimedia Compression Project
+Multimedia Data Compression Project
 
-Department of Computer Engineering
+School of Information and Communication Technology
 
-Hanoi University of Science and Technology
+Hanoi University of Science and Technology (HUST)
 
 ---
 
 # License
 
-This project is developed for educational and research purposes.
+This project is developed for educational and research purposes only.
