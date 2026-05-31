@@ -217,7 +217,7 @@ pip install -r requirements.txt
 Start the application:
 
 ```bash
-streamlit run app.py
+streamlit run main.py
 ```
 
 Expected output:
