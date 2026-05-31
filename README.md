@@ -539,18 +539,3 @@ chmod +x main.py
 - Machine learning based perceptual quality prediction
 - Content-aware quantization matrices
 
----
-
-# Authors
-
-Multimedia Data Compression Project
-
-School of Information and Communication Technology
-
-Hanoi University of Science and Technology (HUST)
-
----
-
-# License
-
-This project is developed for educational and research purposes only.
