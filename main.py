@@ -33,12 +33,12 @@ def calculate_block_variance(image, block_size=16):
 
 def generate_perceptual_qp_map(variance_map, base_qp=24, sensitivity=1.0):
     """
-    Chiều: vùng chi tiết (variance cao) → QP tăng (texture masking, tiết kiệm bitrate).
-            vùng phẳng (variance thấp)  → QP gần base (mắt người nhạy với artifact ở vùng trơn).
+    Vùng phẳng/nền (variance thấp) → Tăng QP (cộng thêm delta) để nén mạnh tay.
+    Vùng chi tiết/mặt người (variance cao) → Giữ nguyên hoặc giảm QP để bảo toàn độ nét.
     """
     max_var = np.max(variance_map) if np.max(variance_map) > 0 else 1.0
     norm_var = variance_map / max_var           # [0..1]
-    qp_delta = norm_var * 12.0 * sensitivity   # range [0..+12]
+    qp_delta = (1.0 - norm_var) * 12.0 * sensitivity   # range [0..+12]
     return np.clip(base_qp + qp_delta, 1, 51).astype(int)
 
 
@@ -197,8 +197,8 @@ threshold   = st.sidebar.slider("Region Classification Threshold (T)", 50, 500, 
                                  help="Variance threshold: classify flat vs. textured blocks")
 st.sidebar.markdown("---")
 st.sidebar.markdown("**QP Map Color Legend:**")
-st.sidebar.markdown("Red = High QP → Heavy compression (textured region)")
-st.sidebar.markdown("Blue = Low QP → Preserve quality (flat region)")
+st.sidebar.markdown("Red = High QP → Heavy compression (flat region)")
+st.sidebar.markdown("Blue = Low QP → Preserve quality (ROI)")
 
 # --- Load video & extract frame ---
 if uploaded_video is not None:
@@ -288,7 +288,7 @@ with c2:
     fig_qp.colorbar(im, ax=ax_qp, orientation='horizontal', label='QP Value')
     st.pyplot(fig_qp)
     plt.close(fig_qp)
-    st.caption("Red = high QP (textured, compress more) | Blue = low QP (flat, preserve quality)")
+    st.caption("Red = high QP (flat region) | Blue = low QP (ROI)")
 
 with c3:
     st.subheader("After Adaptive Compression (Proposed)")
